@@ -81,3 +81,11 @@ Upload the 3 sample images in `/sample-assets` (normal, banned-text, alcohol), c
 ## Exports
 - Exports are under `backend/exports/` and served at `/static/exports`. JPG exports are compressed under 500KB via an iterative quality loop.
 - Judges: verify an example export file size is < 500KB.
+
+## Verification Checklist
+- [x] `backend/requirements.txt` includes `pytesseract` (OCR enabled)
+- [x] Compliance engine calls OCR wrapper for image elements (flags `BANNED_COPY_OCR`)
+- [ ] Demo media present: `docs/demo_video.mp4`, `docs/screenshot*.png`
+- [ ] Demo assets present: `sample-assets/` contains normal, banned-text, alcohol packshots
+- [ ] Bundled font present under `backend/fonts/` for consistent rendering
+- [ ] Example export (`backend/exports/`) committed and < 500KB
