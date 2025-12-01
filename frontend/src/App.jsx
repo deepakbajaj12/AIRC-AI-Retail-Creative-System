@@ -1,6 +1,6 @@
 import React from 'react'
 import CanvasEditor from './components/CanvasEditor'
-import { uploadAssets, suggestLayouts, checkCompliance, exportImage } from './api'
+import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, removeBackground } from './api'
 import { applyAutofixes } from './autofix'
 
 const FORMATS = {
@@ -25,6 +25,8 @@ export default function App(){
   const [exportPath, setExportPath] = React.useState('')
   const [exportUrls, setExportUrls] = React.useState([])
   const [busy, setBusy] = React.useState(false)
+  const [projects, setProjects] = React.useState([])
+  const [projectId, setProjectId] = React.useState('demo')
 
   const onUploadLogo = async (e) => {
     const files = [...e.target.files]
@@ -82,6 +84,50 @@ export default function App(){
     } finally{ setBusy(false) }
   }
 
+  const onServerAutofix = async ()=>{
+    setBusy(true)
+    try{
+      const fixed = await serverAutofix(canvas)
+      setCanvas(fixed)
+      setIssues([])
+    } finally{ setBusy(false) }
+  }
+
+  const onServerExportAll = async ()=>{
+    setBusy(true)
+    try{
+      const data = await exportBatch({ format, headline, subhead, value_text: valueText, logo, packshots })
+      const urls = Object.entries(data).map(([fmt, v]) => ({ format: fmt, url: v.url }))
+      setExportUrls(urls)
+    } finally{ setBusy(false) }
+  }
+
+  const refreshProjects = async ()=>{
+    const items = await listProjects()
+    setProjects(items)
+  }
+
+  React.useEffect(()=>{ refreshProjects() }, [])
+
+  const onSaveProject = async ()=>{
+    await saveProject(projectId || 'untitled', canvas)
+    await refreshProjects()
+  }
+
+  const onLoadProject = async (id)=>{
+    const c = await loadProject(id)
+    if (c?.format) setCanvas(c)
+  }
+
+  const onRemoveBgLastPackshot = async ()=>{
+    if (!packshots.length) return
+    const last = packshots[packshots.length - 1]
+    const res = await removeBackground(last)
+    if (res.url) {
+      setPackshots(prev => [...prev.slice(0,-1), res.url])
+    }
+  }
+
   const changeFormat = (f)=>{
     setFormat(f)
     const { w, h } = FORMATS[f]
@@ -103,6 +149,8 @@ export default function App(){
           <button onClick={onApplyFixes} disabled={!issues.length}>Apply Fixes</button>
           <button onClick={onExport}>Export PNG</button>
           <button onClick={onExportAll} disabled={busy}>Export All Formats</button>
+          <button onClick={onServerAutofix} disabled={busy}>Server Autofix</button>
+          <button onClick={onServerExportAll} disabled={busy}>Server Export All</button>
         </div>
       </header>
       <main>
@@ -114,10 +162,27 @@ export default function App(){
           <div>
             <label>Packshots (max 3): <input type="file" accept="image/*" multiple onChange={onUploadPackshots} /></label>
           </div>
+          <div>
+            <button onClick={onRemoveBgLastPackshot}>Remove BG (last packshot)</button>
+          </div>
           <h3>Copy</h3>
           <label>Headline<input value={headline} onChange={e=>setHeadline(e.target.value)} /></label>
           <label>Subhead<input value={subhead} onChange={e=>setSubhead(e.target.value)} /></label>
           <label>Value Tile<input value={valueText} onChange={e=>setValueText(e.target.value)} /></label>
+          <h3>Project</h3>
+          <label>Project ID<input value={projectId} onChange={e=>setProjectId(e.target.value)} /></label>
+          <div style={{display:'flex', gap:8}}>
+            <button onClick={onSaveProject}>Save</button>
+            <button onClick={()=>onLoadProject(projectId)}>Load</button>
+          </div>
+          <div>
+            <small>Recent:</small>
+            <ul>
+              {projects.map(p => (
+                <li key={p.id}><a href="#" onClick={(e)=>{e.preventDefault(); onLoadProject(p.id)}}>{p.id}</a></li>
+              ))}
+            </ul>
+          </div>
         </aside>
         <section className="canvas">
           <CanvasEditor canvas={canvas} onChange={setCanvas} />

@@ -8,6 +8,8 @@ from .routes.uploads import router as uploads_router
 from .routes.layout import router as layout_router
 from .routes.compliance import router as compliance_router
 from .routes.export import router as export_router
+from .routes.projects import router as projects_router
+from .routes.image_tools import router as image_tools_router
 
 app = FastAPI(title="AIRC – AI Retail Creative System", version="0.1.0")
 
@@ -24,6 +26,8 @@ app.include_router(uploads_router, prefix="/api")
 app.include_router(layout_router, prefix="/api")
 app.include_router(compliance_router, prefix="/api")
 app.include_router(export_router, prefix="/api")
+app.include_router(projects_router, prefix="/api")
+app.include_router(image_tools_router, prefix="/api")
 
 app.mount("/static/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
 app.mount("/static/exports", StaticFiles(directory=str(EXPORTS_DIR)), name="exports")
