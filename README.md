@@ -15,28 +15,32 @@ End-to-end prototype for Tesco-compliant creative builder.
 - Node.js 18+
 - Windows PowerShell 5.1
 
-## Quick Start
+## Quick Start (cross-platform)
 
 ### 1) Backend
-```powershell
-# From repo root (note the en-dash in folder name)
-Push-Location "e:\AIRC – AI Retail Creative System\backend"
-python -m venv .venv; ".venv\Scripts\Activate.ps1"
-python -m pip install --upgrade pip
+```bash
+# from repo root
+cd backend
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+# source .venv/bin/activate
+pip install --upgrade pip
 pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+# run (development)
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2) Frontend
-Open a new PowerShell tab:
-```powershell
-Push-Location "e:\AIRC – AI Retail Creative System\frontend";
-npm install; 
+```bash
+cd frontend
+npm install
 npm run dev
 ```
 
-- Frontend runs at http://localhost:5173
-- Backend runs at http://127.0.0.1:8000 (API under `/api`)
+- Frontend: http://localhost:5173
+- Backend: http://127.0.0.1:8000 (API under `/api`)
 - Static files: `http://127.0.0.1:8000/static/assets/...` and `/static/exports/...`
 
 ## Usage
@@ -50,14 +54,22 @@ npm run dev
 8. Or use "Export All Formats" to generate all variants.
 
 ## Notes
-- Background removal uses a simple near-white remover (PIL). For robust removal, integrate a service like remove.bg.
-- OCR for banned copy is not enabled in this prototype; banned terms are checked against user-entered copy.
-- Fonts: the renderer tries `Arial`; if not available, it falls back to PIL's default font.
+- Background removal uses a simple near-white remover (PIL). It works best on white backgrounds.
+- OCR: enabled via `pytesseract` to detect banned text inside images. Install Tesseract:
+	- Windows: https://github.com/UB-Mannheim/tesseract/wiki
+	- macOS: `brew install tesseract`
+	- Linux: `sudo apt-get install tesseract-ocr`
+- Fonts: the renderer tries `Arial`. To avoid mismatches, consider bundling a TTF under `backend/fonts/` and adjust renderer.
+
+## Demo (60s)
+Upload the 3 sample images in `/sample-assets`, click AI Layout → Compliance Check → Apply Fixes → Export PNG.
 
 ## Roadmap
 - Advanced layout generator (Vision + LLM)
-- OCR for embedded copy in images
-- Server-side auto-fix application
-- OCR for images and advanced background removal
-- Performance-driven layout suggestions (Vision+LLM)
+- Rich auto-fix application on the client and server
+- Server-side OCR visual highlights
 - User authentication and cloud storage
+
+## Media
+- Demo video: `docs/demo_video.mp4`
+- Screenshots: `docs/screenshot1.png`, `docs/screenshot2.png`

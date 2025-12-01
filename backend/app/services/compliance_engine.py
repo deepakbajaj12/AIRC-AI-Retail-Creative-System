@@ -5,6 +5,7 @@ from typing import List, Tuple
 from ..models.schemas import Canvas, ComplianceIssue, TextElement, ImageElement, BaseElement
 from ..config import SAFE_ZONES, BANNED_COPY_PATTERNS, MIN_FONT_SIZES, DRINKAWARE_TEXT
 from ..utils.contrast import passes_wcag_aa
+from ..compliance.ocr_check import ocr_text_from_bytes
 
 
 def _rgb_tuple(rgba) -> Tuple[int, int, int]:
@@ -77,6 +78,27 @@ def check_compliance(canvas: Canvas) -> List[ComplianceIssue]:
                     autofix={"action": "highlight_text", "id": te.id},
                 )
             )
+
+    # 3b. OCR banned copy inside images (packshots/logos)
+    for img_el in images:
+        try:
+            from pathlib import Path
+            p = Path(img_el.src)
+            if not p.exists():
+                continue
+            with open(p, 'rb') as f:
+                text = ocr_text_from_bytes(f.read())
+            if text and pattern.search(text):
+                issues.append(
+                    ComplianceIssue(
+                        code="BANNED_COPY_OCR",
+                        message=f"Banned text detected in image {img_el.id} via OCR.",
+                        severity="error",
+                        autofix={"action": "highlight_image", "id": img_el.id},
+                    )
+                )
+        except Exception:
+            continue
 
     # 4. Contrast checker AA: assume large text if font_size >= 24
     bg_rgb = (255, 255, 255)

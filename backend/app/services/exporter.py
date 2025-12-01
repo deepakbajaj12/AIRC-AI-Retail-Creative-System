@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
+import os
 from ..models.schemas import Canvas, TextElement, ImageElement
 from ..config import EXPORTS_DIR
 
@@ -51,7 +52,12 @@ def render_canvas(canvas: Canvas, output_format: str = "PNG") -> Path:
     out_path = EXPORTS_DIR / f"export_{canvas.format}.{output_format.lower()}"
     if output_format.upper() == "JPG":
         rgb = img.convert("RGB")
-        rgb.save(out_path, format="JPEG", quality=85, optimize=True)
+        quality = 85
+        rgb.save(out_path, format="JPEG", quality=quality, optimize=True)
+        # Reduce quality if over 500KB
+        while os.path.getsize(out_path) > 500 * 1024 and quality > 30:
+            quality -= 5
+            rgb.save(out_path, format="JPEG", quality=quality, optimize=True)
     else:
         img.save(out_path, format="PNG", optimize=True)
     return out_path
