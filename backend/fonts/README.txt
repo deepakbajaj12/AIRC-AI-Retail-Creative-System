@@ -1,0 +1,1 @@
+Place a TTF here (e.g., Inter-Regular.ttf). The renderer prefers this font to avoid platform differences.

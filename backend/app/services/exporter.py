@@ -13,6 +13,16 @@ def _rgb_tuple(rgba) -> Tuple[int, int, int]:
 
 
 def _load_font(name: str, size: int) -> ImageFont.ImageFont:
+    # Try bundled font in backend/fonts/, then Arial, then default
+    try:
+        from pathlib import Path
+        base = Path(__file__).resolve().parent.parent
+        fonts_dir = base / "fonts"
+        bundled = fonts_dir / "Inter-Regular.ttf"
+        if bundled.exists():
+            return ImageFont.truetype(str(bundled), size)
+    except Exception:
+        pass
     try:
         return ImageFont.truetype("arial.ttf", size)
     except Exception:

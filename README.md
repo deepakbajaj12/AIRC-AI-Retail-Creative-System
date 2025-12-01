@@ -62,7 +62,7 @@ npm run dev
 - Fonts: the renderer tries `Arial`. To avoid mismatches, consider bundling a TTF under `backend/fonts/` and adjust renderer.
 
 ## Demo (60s)
-Upload the 3 sample images in `/sample-assets`, click AI Layout → Compliance Check → Apply Fixes → Export PNG.
+Upload the 3 sample images in `/sample-assets` (normal, banned-text, alcohol), click AI Layout → Compliance Check → Apply Fixes → Export PNG. If OCR is set up, the banned-text packshot will be flagged.
 
 ## Roadmap
 - Advanced layout generator (Vision + LLM)
@@ -73,3 +73,11 @@ Upload the 3 sample images in `/sample-assets`, click AI Layout → Compliance C
 ## Media
 - Demo video: `docs/demo_video.mp4`
 - Screenshots: `docs/screenshot1.png`, `docs/screenshot2.png`
+ 
+## Assets
+- Sample assets: add 3 images under `sample-assets/` and upload them via the UI.
+- Bundled font: place a TTF under `backend/fonts/` (e.g., `Inter-Regular.ttf`) to ensure consistent rendering.
+
+## Exports
+- Exports are under `backend/exports/` and served at `/static/exports`. JPG exports are compressed under 500KB via an iterative quality loop.
+- Judges: verify an example export file size is < 500KB.
