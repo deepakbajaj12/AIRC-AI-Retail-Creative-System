@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+*.pyc
+__pycache__/
+.venv/
+.env
+
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Backend artifacts
+backend/exports/
+backend/data/assets/
+
+# Logs
+*.log
+
+# Misc
+*.local

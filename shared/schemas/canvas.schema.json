@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canvas",
+  "type": "object",
+  "properties": {
+    "format": { "type": "string", "enum": ["FB_STORY","IG_STORY","SQUARE","LANDSCAPE","CHECKOUT"] },
+    "width": { "type": "integer" },
+    "height": { "type": "integer" },
+    "background_color": {
+      "type": "object",
+      "properties": {"r":{"type":"integer"},"g":{"type":"integer"},"b":{"type":"integer"},"a":{"type":"number"}},
+      "required": ["r","g","b","a"]
+    },
+    "elements": { "type": "array" }
+  },
+  "required": ["format","width","height","elements"]
+}

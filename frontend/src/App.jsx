@@ -1,0 +1,147 @@
+import React from 'react'
+import CanvasEditor from './components/CanvasEditor'
+import { uploadAssets, suggestLayouts, checkCompliance, exportImage } from './api'
+import { applyAutofixes } from './autofix'
+
+const FORMATS = {
+  FB_STORY: { w:1080, h:1920 },
+  IG_STORY: { w:1080, h:1920 },
+  SQUARE: { w:1080, h:1080 },
+  LANDSCAPE: { w:1200, h:628 },
+  CHECKOUT: { w:1200, h:900 },
+}
+
+export default function App(){
+  const [format, setFormat] = React.useState('SQUARE')
+  const [headline, setHeadline] = React.useState('Fresh deals this week')
+  const [subhead, setSubhead] = React.useState('Quality you can trust')
+  const [valueText, setValueText] = React.useState('2 for £5')
+  const [logo, setLogo] = React.useState(null)
+  const [packshots, setPackshots] = React.useState([])
+  const [canvas, setCanvas] = React.useState(() => ({
+    format: 'SQUARE', width:1080, height:1080, background_color: {r:255,g:255,b:255,a:1}, elements: []
+  }))
+  const [issues, setIssues] = React.useState([])
+  const [exportPath, setExportPath] = React.useState('')
+  const [exportUrls, setExportUrls] = React.useState([])
+  const [busy, setBusy] = React.useState(false)
+
+  const onUploadLogo = async (e) => {
+    const files = [...e.target.files]
+    if(!files.length) return
+    const saved = await uploadAssets(files)
+    setLogo(saved[0])
+  }
+
+  const onUploadPackshots = async (e) => {
+    const files = [...e.target.files]
+    if(!files.length) return
+    const saved = await uploadAssets(files)
+    setPackshots(prev => [...prev, ...saved])
+  }
+
+  const onSuggest = async ()=>{
+    setBusy(true)
+    try{
+      const candidates = await suggestLayouts({ format, headline, subhead, value_text: valueText, logo, packshots })
+      if(candidates.length) setCanvas(candidates[0])
+    } finally{ setBusy(false) }
+  }
+
+  const onCheck = async ()=>{
+    const res = await checkCompliance(canvas)
+    setIssues(res.issues)
+  }
+
+  const onExport = async ()=>{
+    const { url } = await exportImage(canvas, 'PNG')
+    setExportPath(url)
+  }
+
+  const onApplyFixes = ()=>{
+    if (!issues.length) return
+    const fixed = applyAutofixes(canvas, issues)
+    setCanvas(fixed)
+    setIssues([])
+  }
+
+  const onExportAll = async ()=>{
+    setBusy(true)
+    const urls = []
+    try{
+      for (const f of Object.keys(FORMATS)) {
+        const candidates = await suggestLayouts({ format: f, headline, subhead, value_text: valueText, logo, packshots })
+        if (!candidates.length) continue
+        let c = candidates[0]
+        const res = await checkCompliance(c)
+        if (res.issues?.length) c = applyAutofixes(c, res.issues)
+        const { url } = await exportImage(c, 'PNG')
+        urls.push({ format: f, url })
+      }
+      setExportUrls(urls)
+    } finally{ setBusy(false) }
+  }
+
+  const changeFormat = (f)=>{
+    setFormat(f)
+    const { w, h } = FORMATS[f]
+    setCanvas(c => ({ ...c, format: f, width: w, height: h }))
+  }
+
+  return (
+    <div className="app">
+      <header>
+        <h1>AIRC – AI Creative Builder</h1>
+        <div className="toolbar">
+          <label>Format:
+            <select value={format} onChange={(e)=>changeFormat(e.target.value)}>
+              {Object.keys(FORMATS).map(f=> <option key={f} value={f}>{f}</option>)}
+            </select>
+          </label>
+          <button onClick={onSuggest} disabled={busy}>AI Layout</button>
+          <button onClick={onCheck}>Compliance Check</button>
+          <button onClick={onApplyFixes} disabled={!issues.length}>Apply Fixes</button>
+          <button onClick={onExport}>Export PNG</button>
+          <button onClick={onExportAll} disabled={busy}>Export All Formats</button>
+        </div>
+      </header>
+      <main>
+        <aside className="panel left">
+          <h3>Assets</h3>
+          <div>
+            <label>Logo: <input type="file" accept="image/*" onChange={onUploadLogo} /></label>
+          </div>
+          <div>
+            <label>Packshots (max 3): <input type="file" accept="image/*" multiple onChange={onUploadPackshots} /></label>
+          </div>
+          <h3>Copy</h3>
+          <label>Headline<input value={headline} onChange={e=>setHeadline(e.target.value)} /></label>
+          <label>Subhead<input value={subhead} onChange={e=>setSubhead(e.target.value)} /></label>
+          <label>Value Tile<input value={valueText} onChange={e=>setValueText(e.target.value)} /></label>
+        </aside>
+        <section className="canvas">
+          <CanvasEditor canvas={canvas} onChange={setCanvas} />
+        </section>
+        <aside className="panel right">
+          <h3>Compliance</h3>
+          {issues.length === 0 ? <p>No issues yet. Run check.</p> : (
+            <ul>
+              {issues.map((it, idx)=>(<li key={idx}><b>{it.code}</b>: {it.message}</li>))}
+            </ul>
+          )}
+          {exportPath && <p>Exported to: <a href={exportPath} target="_blank" rel="noreferrer">{exportPath}</a></p>}
+          {exportUrls.length > 0 && (
+            <>
+              <h4>Batch Exports</h4>
+              <ul>
+                {exportUrls.map((e,i)=> (
+                  <li key={i}>{e.format}: <a href={e.url} target="_blank" rel="noreferrer">{e.url}</a></li>
+                ))}
+              </ul>
+            </>
+          )}
+        </aside>
+      </main>
+    </div>
+  )
+}
