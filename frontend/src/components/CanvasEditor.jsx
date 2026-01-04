@@ -25,12 +25,36 @@ function useImage(url) {
 const CanvasImage = ({ el, onDragEnd }) => {
   const src = el.src && el.src.startsWith('/static/') ? `http://localhost:8000${el.src}` : el.src
   const img = useImage(src)
+
+  // Calculate aspect ratio fit
+  let renderX = el.bounds.x
+  let renderY = el.bounds.y
+  let renderW = el.bounds.width
+  let renderH = el.bounds.height
+
+  if (img && el.keep_aspect !== false) {
+    const imgRatio = img.width / img.height
+    const boxRatio = el.bounds.width / el.bounds.height
+
+    if (imgRatio > boxRatio) {
+      // Image is wider than box: fit to width
+      renderW = el.bounds.width
+      renderH = renderW / imgRatio
+      renderY = el.bounds.y + (el.bounds.height - renderH) / 2
+    } else {
+      // Image is taller than box: fit to height
+      renderH = el.bounds.height
+      renderW = renderH * imgRatio
+      renderX = el.bounds.x + (el.bounds.width - renderW) / 2
+    }
+  }
+
   return (
     <KImage
-      x={el.bounds.x}
-      y={el.bounds.y}
-      width={el.bounds.width}
-      height={el.bounds.height}
+      x={renderX}
+      y={renderY}
+      width={renderW}
+      height={renderH}
       image={img}
       draggable
       onDragEnd={(e) => onDragEnd(el.id, e)}
