@@ -109,7 +109,7 @@ Fallback demo path (works without OCR + without Gemini key): use banned words in
 ## Verification Checklist
 - [x] `backend/requirements.txt` includes `pytesseract` (OCR enabled)
 - [x] Compliance engine calls OCR wrapper for image elements (flags `BANNED_COPY_OCR`)
-- [ ] Demo media present: `docs/demo_video.mp4`, `docs/screenshot*.png`
-- [ ] Demo assets present: `sample-assets/` contains normal, banned-text, alcohol packshots
-- [ ] Bundled font present under `backend/fonts/` for consistent rendering
-- [ ] Example export (`backend/exports/`) committed and < 500KB
+- [x] Demo media present: `docs/demo_video.mp4`, `docs/screenshot*.png`
+- [x] Demo assets present: `sample-assets/` contains normal, banned-text, alcohol packshots
+- [x] Bundled font present under `backend/fonts/` for consistent rendering
+- [x] Example export (`backend/exports/`) committed and < 500KB
