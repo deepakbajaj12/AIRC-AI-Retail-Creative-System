@@ -12,7 +12,7 @@ SAFE_ZONES = {
     # margins in pixels for each format: top, right, bottom, left
     "FB_STORY": (250, 50, 250, 50),
     "IG_STORY": (250, 50, 250, 50),
-    "SQUARE": (200, 200, 200, 200),
+    "SQUARE": (150, 150, 150, 150),
     "LANDSCAPE": (200, 200, 200, 200),
     "CHECKOUT": (200, 200, 200, 200),
 }

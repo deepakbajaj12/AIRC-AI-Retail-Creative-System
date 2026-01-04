@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import os
 from ..models.schemas import ExportRequest, ExportResponse, LayoutSuggestRequest, LayoutSuggestResponse, Format
 from ..services.exporter import render_canvas
 from ..services.layout_engine import suggest_layouts
@@ -12,7 +13,8 @@ router = APIRouter(prefix="/export", tags=["export"])
 def export_image(payload: ExportRequest):
     out_path = render_canvas(payload.canvas, payload.output_format)
     url = f"/static/exports/{out_path.name}"
-    return ExportResponse(file_path=str(out_path), url=url)
+    size = os.path.getsize(out_path)
+    return ExportResponse(file_path=str(out_path), url=url, file_size_bytes=size)
 
 @router.post("/batch")
 def export_batch(payload: LayoutSuggestRequest):
@@ -26,5 +28,9 @@ def export_batch(payload: LayoutSuggestRequest):
         if issues:
             c = apply_autofixes(c, issues)
         out_path = render_canvas(c, "PNG")
-        results[fmt] = {"url": f"/static/exports/{out_path.name}", "file_path": str(out_path)}
+        results[fmt] = {
+            "url": f"/static/exports/{out_path.name}",
+            "file_path": str(out_path),
+            "file_size_bytes": os.path.getsize(out_path),
+        }
     return results

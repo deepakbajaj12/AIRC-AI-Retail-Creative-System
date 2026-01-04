@@ -6,6 +6,7 @@ from ..models.schemas import Canvas, ComplianceIssue, TextElement, ImageElement,
 from ..config import SAFE_ZONES, BANNED_COPY_PATTERNS, MIN_FONT_SIZES, DRINKAWARE_TEXT
 from ..utils.contrast import passes_wcag_aa
 from ..compliance.ocr_check import ocr_text_from_bytes
+from ..services.llm_service import suggest_compliant_rewrite, fallback_rewrite
 
 
 def _rgb_tuple(rgba) -> Tuple[int, int, int]:
@@ -70,12 +71,14 @@ def check_compliance(canvas: Canvas) -> List[ComplianceIssue]:
     pattern = re.compile("|".join(BANNED_COPY_PATTERNS), flags=re.IGNORECASE)
     for te in texts:
         if te.text and pattern.search(te.text):
+            suggestion = suggest_compliant_rewrite(te.text) or fallback_rewrite(te.text)
             issues.append(
                 ComplianceIssue(
                     code="BANNED_COPY",
                     message=f"Banned copy detected in {te.id}.",
                     severity="error",
-                    autofix={"action": "highlight_text", "id": te.id},
+                    suggestion=suggestion,
+                    autofix={"action": "replace_text", "id": te.id, "new_text": suggestion},
                 )
             )
 
@@ -94,6 +97,7 @@ def check_compliance(canvas: Canvas) -> List[ComplianceIssue]:
                         code="BANNED_COPY_OCR",
                         message=f"Banned text detected in image {img_el.id} via OCR.",
                         severity="error",
+                        suggestion="Remove or cover embedded banned text in the image.",
                         autofix={"action": "highlight_image", "id": img_el.id},
                     )
                 )

@@ -3,6 +3,14 @@ export function applyAutofixes(canvas, issues) {
   for (const issue of issues) {
     const fx = issue.autofix || {}
     switch (fx.action) {
+      case 'replace_text': {
+        const el = updated.elements.find(e => e.id === fx.id)
+        if (!el) break
+        if (typeof fx.new_text === 'string' && fx.new_text.trim()) {
+          el.text = fx.new_text
+        }
+        break
+      }
       case 'nudge_inside': {
         const el = updated.elements.find(e => e.id === fx.id)
         if (!el) break

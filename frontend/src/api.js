@@ -28,7 +28,7 @@ export const serverAutofix = async (canvas) => {
 
 export const exportImage = async (canvas, output_format='PNG') => {
   const { data } = await api.post('/export/image', { canvas, output_format })
-  return { filePath: data.file_path, url: data.url }
+  return { filePath: data.file_path, url: data.url, fileSizeBytes: data.file_size_bytes }
 }
 
 export const exportBatch = async (payload) => {

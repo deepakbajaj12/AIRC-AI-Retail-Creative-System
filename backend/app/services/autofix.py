@@ -9,7 +9,14 @@ def apply_autofixes(canvas: Canvas, issues: List[ComplianceIssue]) -> Canvas:
     for issue in issues:
         fx = issue.autofix or {}
         action = fx.get("action")
-        if action == "nudge_inside":
+        if action == "replace_text":
+            el = next((e for e in updated.elements if e.id == fx.get("id")), None)
+            if not el or not isinstance(el, TextElement):
+                continue
+            new_text = fx.get("new_text")
+            if isinstance(new_text, str) and new_text.strip():
+                el.text = new_text
+        elif action == "nudge_inside":
             el = next((e for e in updated.elements if e.id == fx.get("id")), None)
             if not el:
                 continue

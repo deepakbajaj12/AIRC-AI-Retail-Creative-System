@@ -19,10 +19,18 @@ export default function App(){
   const [logo, setLogo] = React.useState(null)
   const [packshots, setPackshots] = React.useState([])
   const [canvas, setCanvas] = React.useState(() => ({
-    format: 'SQUARE', width:1080, height:1080, background_color: {r:255,g:255,b:255,a:1}, elements: []
+    format: 'SQUARE', width:1080, height:1080, background_color: {r:255,g:255,b:255,a:1}, elements: [
+      { id: 'demo-logo', type: 'logo', src: 'https://placehold.co/150x150?text=Logo', bounds: { x: 50, y: 50, width: 150, height: 150 } },
+      { id: 'demo-prod', type: 'packshot', src: 'https://placehold.co/600x600?text=Product', bounds: { x: 240, y: 240, width: 600, height: 600 } },
+      { id: 'demo-price', type: 'value_tile', text: '2 for £5', font_size: 80, font_family: 'Arial', font_weight: 'bold', align: 'center', color: {r:255,g:0,b:0,a:1}, bounds: { x: 300, y: 850, width: 480, height: 100 } }
+    ]
   }))
-  const [issues, setIssues] = React.useState([])
+  const [issues, setIssues] = React.useState([
+    { code: 'WARN', message: 'Logo too close to edge', suggestion: 'Move logo inward' },
+    { code: 'INFO', message: 'Headline exceeds safe zone', suggestion: 'Resize text' }
+  ])
   const [exportPath, setExportPath] = React.useState('')
+  const [exportSizeBytes, setExportSizeBytes] = React.useState(null)
   const [exportUrls, setExportUrls] = React.useState([])
   const [busy, setBusy] = React.useState(false)
   const [projects, setProjects] = React.useState([])
@@ -56,8 +64,9 @@ export default function App(){
   }
 
   const onExport = async ()=>{
-    const { url } = await exportImage(canvas, 'PNG')
+    const { url, fileSizeBytes } = await exportImage(canvas, 'PNG')
     setExportPath(url)
+    setExportSizeBytes(fileSizeBytes ?? null)
   }
 
   const onApplyFixes = ()=>{
@@ -77,8 +86,8 @@ export default function App(){
         let c = candidates[0]
         const res = await checkCompliance(c)
         if (res.issues?.length) c = applyAutofixes(c, res.issues)
-        const { url } = await exportImage(c, 'PNG')
-        urls.push({ format: f, url })
+        const { url, fileSizeBytes } = await exportImage(c, 'PNG')
+        urls.push({ format: f, url, fileSizeBytes })
       }
       setExportUrls(urls)
     } finally{ setBusy(false) }
@@ -97,7 +106,7 @@ export default function App(){
     setBusy(true)
     try{
       const data = await exportBatch({ format, headline, subhead, value_text: valueText, logo, packshots })
-      const urls = Object.entries(data).map(([fmt, v]) => ({ format: fmt, url: v.url }))
+      const urls = Object.entries(data).map(([fmt, v]) => ({ format: fmt, url: v.url, fileSizeBytes: v.file_size_bytes }))
       setExportUrls(urls)
     } finally{ setBusy(false) }
   }
@@ -191,16 +200,29 @@ export default function App(){
           <h3>Compliance</h3>
           {issues.length === 0 ? <p>No issues yet. Run check.</p> : (
             <ul>
-              {issues.map((it, idx)=>(<li key={idx}><b>{it.code}</b>: {it.message}</li>))}
+              {issues.map((it, idx)=>(
+                <li key={idx}>
+                  <b>{it.code}</b>: {it.message}
+                  {it.suggestion ? <div><small>Suggestion: {it.suggestion}</small></div> : null}
+                </li>
+              ))}
             </ul>
           )}
-          {exportPath && <p>Exported to: <a href={exportPath} target="_blank" rel="noreferrer">{exportPath}</a></p>}
+          {exportPath && (
+            <p>
+              Exported to: <a href={exportPath} target="_blank" rel="noreferrer">{exportPath}</a>
+              {typeof exportSizeBytes === 'number' ? <span> ({Math.round(exportSizeBytes/1024)} KB)</span> : null}
+            </p>
+          )}
           {exportUrls.length > 0 && (
             <>
               <h4>Batch Exports</h4>
               <ul>
                 {exportUrls.map((e,i)=> (
-                  <li key={i}>{e.format}: <a href={e.url} target="_blank" rel="noreferrer">{e.url}</a></li>
+                  <li key={i}>
+                    {e.format}: <a href={e.url} target="_blank" rel="noreferrer">{e.url}</a>
+                    {typeof e.fileSizeBytes === 'number' ? <span> ({Math.round(e.fileSizeBytes/1024)} KB)</span> : null}
+                  </li>
                 ))}
               </ul>
             </>

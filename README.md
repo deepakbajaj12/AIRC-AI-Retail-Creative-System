@@ -55,14 +55,38 @@ npm run dev
 
 ## Notes
 - Background removal uses a simple near-white remover (PIL). It works best on white backgrounds.
-- OCR: enabled via `pytesseract` to detect banned text inside images. Install Tesseract:
+
+### OCR (Optional)
+- OCR is enabled via `pytesseract` to detect banned text inside images.
+- If Tesseract isn't installed, OCR silently becomes a no-op (the app still runs; image-text checks are skipped).
+- To enable OCR, install Tesseract:
 	- Windows: https://github.com/UB-Mannheim/tesseract/wiki
 	- macOS: `brew install tesseract`
 	- Linux: `sudo apt-get install tesseract-ocr`
-- Fonts: the renderer tries `Arial`. To avoid mismatches, consider bundling a TTF under `backend/fonts/` and adjust renderer.
+
+### LLM (Gemini) (Optional)
+- Banned-copy issues can include rewrite suggestions. If `GEMINI_API_KEY` is not set, the backend uses a deterministic fallback rewrite.
+- Env vars:
+	- `GEMINI_API_KEY` (optional)
+	- `GEMINI_MODEL` (default: `gemini-1.5-flash`)
+	- `AIRC_LLM_ENABLED` (set to `0` to disable)
+
+### Fonts (Optional but recommended)
+- The exporter tries `backend/fonts/Inter-Regular.ttf` first, then falls back to Arial/default.
+- To download Inter:
+	- Windows: run `backend/fonts/download_inter.ps1`
+	- macOS/Linux: run `backend/fonts/download_inter.sh`
 
 ## Demo (60s)
-Upload the 3 sample images in `/sample-assets` (normal, banned-text, alcohol), click AI Layout → Compliance Check → Apply Fixes → Export PNG. If OCR is set up, the banned-text packshot will be flagged.
+Use the included assets in `sample-assets/`:
+- `sample-assets/logo_demo.png`
+- `sample-assets/packshot_normal.png`
+- `sample-assets/packshot_banned_text.png` (contains "FREE" for OCR demo)
+- `sample-assets/packshot_alcohol.png`
+
+Flow: Upload → AI Layout → Compliance Check → Apply Fixes → Export PNG.
+
+Fallback demo path (works without OCR + without Gemini key): use banned words in the text inputs (e.g. headline contains "FREE") → Compliance Check shows a suggestion → Apply Fixes replaces the text.
 
 ## Roadmap
 - Advanced layout generator (Vision + LLM)
@@ -71,8 +95,8 @@ Upload the 3 sample images in `/sample-assets` (normal, banned-text, alcohol), c
 - User authentication and cloud storage
 
 ## Media
-- Demo video: `docs/demo_video.mp4`
-- Screenshots: `docs/screenshot1.png`, `docs/screenshot2.png`
+- Demo video (placeholder): `docs/demo_video.gif` (replace with a real 45–60s screen recording for submission)
+- Screenshots (placeholders): `docs/screenshot1.png`, `docs/screenshot2.png`
  
 ## Assets
 - Sample assets: add 3 images under `sample-assets/` and upload them via the UI.

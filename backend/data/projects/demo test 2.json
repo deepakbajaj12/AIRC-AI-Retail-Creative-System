@@ -1,0 +1,63 @@
+{
+  "format": "SQUARE",
+  "width": 1080,
+  "height": 1080,
+  "background_color": {
+    "r": 255,
+    "g": 255,
+    "b": 255,
+    "a": 1.0
+  },
+  "background_image": null,
+  "elements": [
+    {
+      "id": "demo-logo",
+      "type": "logo",
+      "bounds": {
+        "x": 50,
+        "y": 50,
+        "width": 150,
+        "height": 150
+      },
+      "z": 0,
+      "src": "https://placehold.co/150x150?text=Logo",
+      "keep_aspect": true
+    },
+    {
+      "id": "demo-prod",
+      "type": "packshot",
+      "bounds": {
+        "x": 240,
+        "y": 240,
+        "width": 600,
+        "height": 600
+      },
+      "z": 0,
+      "src": "https://placehold.co/600x600?text=Product",
+      "keep_aspect": true
+    },
+    {
+      "id": "demo-price",
+      "type": "value_tile",
+      "bounds": {
+        "x": 300,
+        "y": 850,
+        "width": 480,
+        "height": 100
+      },
+      "z": 0,
+      "text": "2 for £5",
+      "font_family": "Arial",
+      "font_size": 80,
+      "font_weight": "bold",
+      "color": {
+        "r": 255,
+        "g": 0,
+        "b": 0,
+        "a": 1.0
+      },
+      "align": "center",
+      "background": null
+    }
+  ]
+}

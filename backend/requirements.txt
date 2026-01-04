@@ -4,3 +4,6 @@ pillow
 numpy
 python-multipart
 pytesseract
+google-generativeai
+pytest
+httpx

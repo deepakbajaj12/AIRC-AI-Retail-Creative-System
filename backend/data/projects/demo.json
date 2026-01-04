@@ -1,0 +1,114 @@
+{
+  "format": "IG_STORY",
+  "width": 1080,
+  "height": 1920,
+  "background_color": {
+    "r": 255,
+    "g": 255,
+    "b": 255,
+    "a": 1.0
+  },
+  "background_image": null,
+  "elements": [
+    {
+      "id": "logo",
+      "type": "logo",
+      "bounds": {
+        "x": 150,
+        "y": 150,
+        "width": 200,
+        "height": 120
+      },
+      "z": 1,
+      "src": "/static/assets/bird_1.png",
+      "keep_aspect": true
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "bounds": {
+        "x": 108,
+        "y": 216,
+        "width": 864,
+        "height": 150
+      },
+      "z": 2,
+      "text": "Fresh deals this week",
+      "font_family": "Arial",
+      "font_size": 64,
+      "font_weight": "bold",
+      "color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1.0
+      },
+      "align": "center",
+      "background": null
+    },
+    {
+      "id": "subhead",
+      "type": "text",
+      "bounds": {
+        "x": 162,
+        "y": 345,
+        "width": 756,
+        "height": 120
+      },
+      "z": 3,
+      "text": "Quality you can trust",
+      "font_family": "Arial",
+      "font_size": 32,
+      "font_weight": "normal",
+      "color": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1.0
+      },
+      "align": "center",
+      "background": null
+    },
+    {
+      "id": "value",
+      "type": "value_tile",
+      "bounds": {
+        "x": 150,
+        "y": 790,
+        "width": 320,
+        "height": 120
+      },
+      "z": 4,
+      "text": "2 for £5",
+      "font_family": "Arial",
+      "font_size": 48,
+      "font_weight": "bold",
+      "color": {
+        "r": 255,
+        "g": 255,
+        "b": 255,
+        "a": 1.0
+      },
+      "align": "center",
+      "background": {
+        "r": 0,
+        "g": 0,
+        "b": 0,
+        "a": 1.0
+      }
+    },
+    {
+      "id": "packshot_0",
+      "type": "packshot",
+      "bounds": {
+        "x": 710,
+        "y": 670,
+        "width": 220,
+        "height": 240
+      },
+      "z": 5,
+      "src": "/static/assets/product front_2.png",
+      "keep_aspect": true
+    }
+  ]
+}

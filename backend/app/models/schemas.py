@@ -69,6 +69,7 @@ class ComplianceIssue(BaseModel):
     message: str
     severity: Literal["error", "warning", "info"] = "error"
     autofix: Optional[dict] = None
+    suggestion: Optional[str] = None
 
 class ComplianceRequest(BaseModel):
     canvas: Canvas
@@ -84,3 +85,4 @@ class ExportRequest(BaseModel):
 class ExportResponse(BaseModel):
     file_path: str
     url: str
+    file_size_bytes: int

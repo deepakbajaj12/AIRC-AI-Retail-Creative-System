@@ -5,7 +5,7 @@ from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
 import os
 from ..models.schemas import Canvas, TextElement, ImageElement
-from ..config import EXPORTS_DIR
+from ..config import EXPORTS_DIR, ASSETS_DIR
 
 
 def _rgb_tuple(rgba) -> Tuple[int, int, int]:
@@ -37,6 +37,9 @@ def render_canvas(canvas: Canvas, output_format: str = "PNG") -> Path:
         if isinstance(el, ImageElement):
             try:
                 src_path = Path(el.src)
+                if el.src.startswith("/static/assets/"):
+                    src_path = ASSETS_DIR / el.src.replace("/static/assets/", "")
+
                 if not src_path.exists():
                     continue
                 pic = Image.open(src_path).convert("RGBA")
