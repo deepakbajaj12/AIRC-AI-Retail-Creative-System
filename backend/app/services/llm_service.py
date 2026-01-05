@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
-
+import json
+from typing import Optional, List, Dict, Any
 
 def _enabled() -> bool:
     return os.getenv("AIRC_LLM_ENABLED", "1") not in ("0", "false", "False")
@@ -39,6 +39,106 @@ def suggest_compliant_rewrite(text: str) -> Optional[str]:
         out = out.strip().strip('"').strip("'")
         return out or None
     except Exception:
+        return None
+
+
+def generate_layout_json(
+    format_name: str,
+    width: int,
+    height: int,
+    headline: str,
+    subhead: str,
+    value_text: str,
+    logo_url: str,
+    packshot_urls: List[str]
+) -> Optional[Dict[str, Any]]:
+    """
+    Asks Gemini to generate a JSON layout for the given elements.
+    Returns a dict matching the Canvas schema, or None on failure.
+    """
+    if not _enabled():
+        return None
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return None
+
+    model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name)
+
+        # Construct a description of the elements
+        elements_desc = []
+        if headline:
+            elements_desc.append(f"- Headline text: '{headline}'")
+        if subhead:
+            elements_desc.append(f"- Subhead text: '{subhead}'")
+        if value_text:
+            elements_desc.append(f"- Value/Price text: '{value_text}'")
+        if logo_url:
+            elements_desc.append(f"- Logo image (src='{logo_url}')")
+        for i, p in enumerate(packshot_urls):
+            elements_desc.append(f"- Packshot image {i+1} (src='{p}')")
+
+        prompt = f"""
+        You are an expert graphic designer. Create a JSON layout for a retail banner ad.
+        
+        Canvas Details:
+        - Format: {format_name}
+        - Dimensions: {width}x{height} pixels
+        
+        Elements to Include:
+        {chr(10).join(elements_desc)}
+        
+        Requirements:
+        1. Return ONLY valid JSON. No markdown formatting.
+        2. The JSON must match this schema structure:
+           {{
+             "format": "{format_name}",
+             "width": {width},
+             "height": {height},
+             "background_color": {{ "r": 255, "g": 255, "b": 255, "a": 1 }},
+             "elements": [
+               {{
+                 "id": "unique_id",
+                 "type": "text" | "image" | "logo" | "packshot" | "value_tile",
+                 "text": "string (if text type)",
+                 "src": "string (if image type)",
+                 "bounds": {{ "x": int, "y": int, "width": int, "height": int }},
+                 "font_size": int (if text),
+                 "color": {{ "r": int, "g": int, "b": int, "a": 1 }},
+                 "z": int (layer order)
+               }}
+             ]
+           }}
+        3. Arrange elements professionally. 
+           - Ensure no overlap between text and important image parts.
+           - Keep text legible (good font size).
+           - Respect safe zones (don't put content too close to edges).
+           - Center the main product (packshot).
+           - Place logo typically in a corner or top/bottom center.
+        """
+
+        resp = model.generate_content(prompt)
+        out = getattr(resp, "text", None)
+        if not out:
+            return None
+        
+        # Clean up potential markdown code blocks
+        out = out.strip()
+        if out.startswith("```json"):
+            out = out[7:]
+        if out.startswith("```"):
+            out = out[3:]
+        if out.endswith("```"):
+            out = out[:-3]
+        
+        return json.loads(out.strip())
+    except Exception as e:
+        print(f"LLM Layout Gen Error: {e}")
         return None
 
 

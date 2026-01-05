@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List
 from ..models.schemas import Canvas, TextElement, ImageElement, BaseElement, Rect, RGBA, Format
 from ..config import FORMATS, SAFE_ZONES
+from .llm_service import generate_layout_json
 
 # Z-index constants
 Z_BG = 0
@@ -26,6 +27,29 @@ def _calc_text_height(text: str, font_size: int, width: int) -> int:
     lines = (len(text) // chars_per_line) + 1
     return int(lines * font_size * 1.3)
 
+def _arrange_packshots(packshots: List[str], bounds: Rect, z_start: int) -> List[ImageElement]:
+    elements = []
+    count = min(len(packshots), 3)
+    if count == 0:
+        return elements
+    
+    # Simple horizontal arrangement
+    padding = 20
+    # Calculate width for each item
+    item_w = (bounds.width - (padding * (count - 1))) // count
+    
+    for i in range(count):
+        x = bounds.x + i * (item_w + padding)
+        y = bounds.y
+        elements.append(ImageElement(
+            id=f"packshot_{i}",
+            type="packshot",
+            src=packshots[i],
+            bounds=Rect(x=x, y=y, width=item_w, height=bounds.height),
+            z=z_start + i
+        ))
+    return elements
+
 def _generate_landscape_standard(format, headline, subhead, value_text, logo, packshots) -> Canvas:
     """Standard Landscape: Image Left, Text Right"""
     w, h, t, r, b, l = _get_safe_zones(format)
@@ -43,14 +67,24 @@ def _generate_landscape_standard(format, headline, subhead, value_text, logo, pa
     if packshots:
         avail_w = mid_x - l - 20
         avail_h = h - t - b
-        ps_w = min(avail_w, 500)
-        ps_h = min(avail_h, 500)
-        ps_x = l + (mid_x - l) // 2 - ps_w // 2
-        ps_y = t + (h - t - b) // 2 - ps_h // 2
-        elements.append(ImageElement(
-            id="packshot_0", type="packshot", src=packshots[0], 
-            bounds=Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), z=Z_IMAGE
-        ))
+        
+        # Adjust width based on count to avoid tiny images if we have 3
+        # But we are constrained by half width.
+        ps_rect = Rect(x=l, y=t, width=avail_w, height=avail_h)
+        
+        # Center the group vertically/horizontally if possible?
+        # For now, just fill the area with _arrange_packshots logic
+        # We might want to center the *group* of packshots.
+        
+        # Let's define a max width for the group
+        group_w = min(avail_w, 600)
+        group_h = min(avail_h, 500)
+        
+        # Center the group rect
+        group_x = l + (avail_w - group_w) // 2
+        group_y = t + (avail_h - group_h) // 2
+        
+        elements.extend(_arrange_packshots(packshots, Rect(x=group_x, y=group_y, width=group_w, height=group_h), Z_IMAGE))
 
     # 3. Text (Right Half)
     txt_x = mid_x + 40
@@ -110,14 +144,14 @@ def _generate_landscape_inverted(format, headline, subhead, value_text, logo, pa
     if packshots:
         avail_w = (w - r) - mid_x - 20
         avail_h = h - t - b
-        ps_w = min(avail_w, 500)
-        ps_h = min(avail_h, 500)
-        ps_x = mid_x + 20 + (avail_w - ps_w) // 2
-        ps_y = t + (h - t - b) // 2 - ps_h // 2
-        elements.append(ImageElement(
-            id="packshot_0", type="packshot", src=packshots[0], 
-            bounds=Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), z=Z_IMAGE
-        ))
+        
+        group_w = min(avail_w, 600)
+        group_h = min(avail_h, 500)
+        
+        group_x = mid_x + 20 + (avail_w - group_w) // 2
+        group_y = t + (avail_h - group_h) // 2
+        
+        elements.extend(_arrange_packshots(packshots, Rect(x=group_x, y=group_y, width=group_w, height=group_h), Z_IMAGE))
 
     # 3. Text (Left Half)
     txt_x = l
@@ -201,21 +235,41 @@ def _generate_vertical_standard(format, headline, subhead, value_text, logo, pac
     
     # Packshot (Bottom Right)
     if packshots:
-        ps_w = min(safe_w // 2 + 100, 600)
-        ps_h = min(bottom_area_h, 600)
-        ps_x = w - r - ps_w
-        ps_y = h - b - ps_h
-        elements.append(ImageElement(
-            id="packshot_0", type="packshot", src=packshots[0], 
-            bounds=Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), z=Z_IMAGE
-        ))
+        # If multiple packshots, we might need more width.
+        # Standard vertical usually puts packshot in bottom right.
+        # If 3 packshots, maybe use full width?
+        
+        if len(packshots) > 1:
+             # Use full width for multiple packshots at bottom
+            ps_w = min(safe_w, 700)
+            ps_h = min(bottom_area_h, 500)
+            ps_x = l + (safe_w - ps_w) // 2
+            ps_y = h - b - ps_h
+            elements.extend(_arrange_packshots(packshots, Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), Z_IMAGE))
+        else:
+            # Single packshot - keep original "Hero" placement
+            ps_w = min(safe_w // 2 + 100, 600)
+            ps_h = min(bottom_area_h, 600)
+            ps_x = w - r - ps_w
+            ps_y = h - b - ps_h
+            elements.append(ImageElement(
+                id="packshot_0", type="packshot", src=packshots[0], 
+                bounds=Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), z=Z_IMAGE
+            ))
 
     # Value Tile (Bottom Left)
     if value_text:
         val_w = 320
         val_h = 140
         val_x = l
-        val_y = h - b - val_h - 20
+        # If multiple packshots used full width, we need to overlay value or move it up
+        if packshots and len(packshots) > 1:
+             val_y = h - b - val_h - 20 - 100 # Move up a bit? Or overlay?
+             # Let's overlay on bottom left
+             val_y = h - b - val_h - 20
+        else:
+             val_y = h - b - val_h - 20
+             
         elements.append(TextElement(
             id="value", type="value_tile", text=value_text, font_family="Arial", font_size=56,
             font_weight="bold", color=RGBA(r=255, g=255, b=0, a=1), background=RGBA(r=0, g=0, b=0, a=1),
@@ -268,10 +322,8 @@ def _generate_vertical_centered(format, headline, subhead, value_text, logo, pac
         ps_h = min(500, 600)
         ps_x = l + (safe_w - ps_w) // 2
         ps_y = h - b - ps_h - 20
-        elements.append(ImageElement(
-            id="packshot_0", type="packshot", src=packshots[0], 
-            bounds=Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), z=Z_IMAGE
-        ))
+        
+        elements.extend(_arrange_packshots(packshots, Rect(x=ps_x, y=ps_y, width=ps_w, height=ps_h), Z_IMAGE))
         
         # Value Tile (Overlaid on Packshot or just above it)
         if value_text:
@@ -310,6 +362,20 @@ def suggest_layouts(
     
     candidates = []
     
+    # 1. Try LLM Generation
+    w, h = FORMATS[format]
+    llm_data = generate_layout_json(
+        format, w, h, headline, subhead, value_text, logo, packshots
+    )
+    if llm_data:
+        try:
+            # Ensure format is correct enum
+            llm_data["format"] = format
+            candidates.append(Canvas(**llm_data))
+        except Exception as e:
+            print(f"Error parsing LLM layout: {e}")
+
+    # 2. Algorithmic Fallbacks
     if format == "LANDSCAPE":
         candidates.append(_generate_landscape_standard(format, headline, subhead, value_text, logo, packshots))
         candidates.append(_generate_landscape_inverted(format, headline, subhead, value_text, logo, packshots))
