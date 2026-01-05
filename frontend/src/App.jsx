@@ -174,7 +174,7 @@ export default function App(){
       <header>
         <h1>AIRC – AI Creative Builder</h1>
         <div className="toolbar">
-          <label>Format:
+          <label title="Format determines platform (Instagram, Web, Mobile)">Format:
             <select value={format} onChange={(e)=>changeFormat(e.target.value)}>
               {Object.keys(FORMATS).map(f=> <option key={f} value={f}>{f}</option>)}
             </select>
@@ -193,9 +193,11 @@ export default function App(){
           <h3>Assets</h3>
           <div>
             <label>Logo: <input type="file" accept="image/*" onChange={onUploadLogo} /></label>
+            <small style={{display:'block', color:'#666', fontSize:'0.8em', marginTop:'2px'}}>Represents Brand Identity (e.g., FreshFarm)</small>
           </div>
           <div>
             <label>Packshots (max 3): <input type="file" accept="image/*" multiple onChange={onUploadPackshots} /></label>
+            <small style={{display:'block', color:'#666', fontSize:'0.8em', marginTop:'2px'}}>Represents Product Images (e.g., Organic Apples)</small>
           </div>
           <div>
             <button onClick={onRemoveBgLastPackshot}>Remove BG (last packshot)</button>
