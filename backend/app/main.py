@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from .config import ASSETS_DIR, EXPORTS_DIR
+from .config import ASSETS_DIR, STATIC_DIR
 
 from .routes.health import router as health_router
 from .routes.uploads import router as uploads_router
@@ -29,8 +29,7 @@ app.include_router(export_router, prefix="/api")
 app.include_router(projects_router, prefix="/api")
 app.include_router(image_tools_router, prefix="/api")
 
-app.mount("/static/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
-app.mount("/static/exports", StaticFiles(directory=str(EXPORTS_DIR)), name="exports")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")
 def root():

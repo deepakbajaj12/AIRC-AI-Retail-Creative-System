@@ -7,7 +7,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 ASSETS_DIR = DATA_DIR / "assets"
-EXPORTS_DIR = BASE_DIR / "exports"
+STATIC_DIR = BASE_DIR / "static"
+EXPORTS_DIR = STATIC_DIR / "exports"
 
 ASSETS_DIR.mkdir(parents=True, exist_ok=True)
 EXPORTS_DIR.mkdir(parents=True, exist_ok=True)

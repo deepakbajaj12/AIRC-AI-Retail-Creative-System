@@ -238,7 +238,7 @@ export default function App(){
           )}
           {exportPath && (
             <p>
-              Exported to: <a href={exportPath} target="_blank" rel="noreferrer">{exportPath}</a>
+              Exported to: <a href={exportPath.startsWith('http') ? exportPath : `${import.meta.env.VITE_API_BASE_URL?.replace(/\/api\/?$/, '') || 'http://localhost:8000'}${exportPath}`} target="_blank" rel="noreferrer">Download Image</a>
               {typeof exportSizeBytes === 'number' ? <span> ({Math.round(exportSizeBytes/1024)} KB)</span> : null}
             </p>
           )}
@@ -248,7 +248,7 @@ export default function App(){
               <ul>
                 {exportUrls.map((e,i)=> (
                   <li key={i}>
-                    {e.format}: <a href={e.url} target="_blank" rel="noreferrer">{e.url}</a>
+                    {e.format}: <a href={e.url.startsWith('http') ? e.url : `${import.meta.env.VITE_API_BASE_URL?.replace(/\/api\/?$/, '') || 'http://localhost:8000'}${e.url}`} target="_blank" rel="noreferrer">Download</a>
                     {typeof e.fileSizeBytes === 'number' ? <span> ({Math.round(e.fileSizeBytes/1024)} KB)</span> : null}
                   </li>
                 ))}
