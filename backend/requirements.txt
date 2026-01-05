@@ -7,3 +7,5 @@ pytesseract
 google-generativeai
 pytest
 httpx
+python-dotenv
+
