@@ -112,8 +112,12 @@ export default function App(){
   }
 
   const refreshProjects = async ()=>{
-    const items = await listProjects()
-    setProjects(items)
+    try {
+      const items = await listProjects()
+      setProjects(items)
+    } catch (e) {
+      console.error("Failed to load projects", e)
+    }
   }
 
   React.useEffect(()=>{ refreshProjects() }, [])
