@@ -381,7 +381,7 @@ def suggest_layouts(
             print(f"Error parsing LLM layout: {e}")
 
     # 2. Algorithmic Fallbacks
-    if format == "LANDSCAPE":
+    if format in ("LANDSCAPE", "CHECKOUT"):
         candidates.append(_generate_landscape_standard(format, headline, subhead, value_text, logo, packshots))
         candidates.append(_generate_landscape_inverted(format, headline, subhead, value_text, logo, packshots))
     else:
