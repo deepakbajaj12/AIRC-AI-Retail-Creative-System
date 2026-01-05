@@ -55,18 +55,31 @@ export default function App(){
     try{
       const candidates = await suggestLayouts({ format, headline, subhead, value_text: valueText, logo, packshots })
       if(candidates.length) setCanvas(candidates[0])
+    } catch(e) {
+      console.error(e)
+      alert("Failed to generate layout. Ensure backend is running and accessible.")
     } finally{ setBusy(false) }
   }
 
   const onCheck = async ()=>{
-    const res = await checkCompliance(canvas)
-    setIssues(res.issues)
+    try {
+      const res = await checkCompliance(canvas)
+      setIssues(res.issues)
+    } catch(e) {
+      console.error(e)
+      alert("Compliance check failed.")
+    }
   }
 
   const onExport = async ()=>{
-    const { url, fileSizeBytes } = await exportImage(canvas, 'PNG')
-    setExportPath(url)
-    setExportSizeBytes(fileSizeBytes ?? null)
+    try {
+      const { url, fileSizeBytes } = await exportImage(canvas, 'PNG')
+      setExportPath(url)
+      setExportSizeBytes(fileSizeBytes ?? null)
+    } catch(e) {
+      console.error(e)
+      alert("Export failed.")
+    }
   }
 
   const onApplyFixes = ()=>{
@@ -90,6 +103,9 @@ export default function App(){
         urls.push({ format: f, url, fileSizeBytes })
       }
       setExportUrls(urls)
+    } catch(e) {
+      console.error(e)
+      alert("Batch export failed.")
     } finally{ setBusy(false) }
   }
 
@@ -99,6 +115,9 @@ export default function App(){
       const fixed = await serverAutofix(canvas)
       setCanvas(fixed)
       setIssues([])
+    } catch(e) {
+      console.error(e)
+      alert("Server autofix failed.")
     } finally{ setBusy(false) }
   }
 
@@ -108,6 +127,9 @@ export default function App(){
       const data = await exportBatch({ format, headline, subhead, value_text: valueText, logo, packshots })
       const urls = Object.entries(data).map(([fmt, v]) => ({ format: fmt, url: v.url, fileSizeBytes: v.file_size_bytes }))
       setExportUrls(urls)
+    } catch(e) {
+      console.error(e)
+      alert("Server batch export failed.")
     } finally{ setBusy(false) }
   }
 
