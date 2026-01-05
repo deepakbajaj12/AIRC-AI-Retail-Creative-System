@@ -23,7 +23,11 @@ function useImage(url) {
 }
 
 const CanvasImage = ({ el, onDragEnd }) => {
-  const src = el.src && el.src.startsWith('/static/') ? `http://localhost:8000${el.src}` : el.src
+  // Derive server root from API URL
+  const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+  const serverUrl = apiBase.replace(/\/api\/?$/, '')
+  
+  const src = el.src && el.src.startsWith('/static/') ? `${serverUrl}${el.src}` : el.src
   const img = useImage(src)
 
   // Calculate aspect ratio fit
