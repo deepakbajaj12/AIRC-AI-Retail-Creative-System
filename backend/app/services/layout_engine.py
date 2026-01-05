@@ -295,6 +295,9 @@ def _generate_vertical_centered(format, headline, subhead, value_text, logo, pac
             bounds=Rect(x=logo_x, y=current_y, width=logo_w, height=120), z=Z_LOGO
         ))
         current_y += 140
+    else:
+        # If no logo, start lower to avoid hitting top edge
+        current_y += 50
 
     # 2. Text (Center)
     if headline:
@@ -329,8 +332,10 @@ def _generate_vertical_centered(format, headline, subhead, value_text, logo, pac
         if value_text:
             val_w = 300
             val_h = 100
-            val_x = ps_x + ps_w - val_w + 20 # Offset to right
-            val_y = ps_y - 50 # Overlap top right corner
+            # Move value tile to bottom right to avoid covering the first packshot
+            val_x = ps_x + ps_w - val_w + 20 
+            val_y = ps_y + ps_h - val_h + 20 # Bottom right corner overlap
+            
             elements.append(TextElement(
                 id="value", type="value_tile", text=value_text, font_family="Arial", font_size=48,
                 font_weight="bold", color=RGBA(r=255, g=255, b=0, a=1), background=RGBA(r=0, g=0, b=0, a=1),
