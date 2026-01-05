@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+// Ensure API_URL does not end with a slash to avoid double slashes when appending paths
+const rawUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_URL = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl
+
 const api = axios.create({ baseURL: API_URL })
 
 export const uploadAssets = async (files) => {
