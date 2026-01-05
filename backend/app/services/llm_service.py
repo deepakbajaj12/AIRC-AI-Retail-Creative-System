@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 import json
 from typing import Optional, List, Dict, Any
+from pathlib import Path
+from ..config import ASSETS_DIR
 
 def _enabled() -> bool:
     return os.getenv("AIRC_LLM_ENABLED", "1") not in ("0", "false", "False")
@@ -67,23 +69,52 @@ def generate_layout_json(
 
     try:
         import google.generativeai as genai
+        from PIL import Image
+        
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(model_name)
+
+        # Prepare inputs for multimodal prompt
+        prompt_parts = []
+        
+        # Load images if available
+        loaded_images = []
+        for p_url in packshot_urls:
+            # Convert /static/assets/foo.png -> ASSETS_DIR/foo.png
+            if "/static/assets/" in p_url:
+                fname = p_url.split("/static/assets/")[-1]
+                fpath = ASSETS_DIR / fname
+                if fpath.exists():
+                    try:
+                        img = Image.open(fpath)
+                        loaded_images.append(img)
+                        prompt_parts.append(img)
+                        prompt_parts.append(f"Image: {fname}")
+                    except Exception:
+                        pass
 
         # Construct a description of the elements
         elements_desc = []
         if headline:
             elements_desc.append(f"- Headline text: '{headline}'")
+        else:
+            elements_desc.append("- Headline text: (MISSING - Please generate a catchy, short retail headline based on the product image)")
+            
         if subhead:
             elements_desc.append(f"- Subhead text: '{subhead}'")
+        else:
+            elements_desc.append("- Subhead text: (MISSING - Please generate a short supporting subhead)")
+
         if value_text:
             elements_desc.append(f"- Value/Price text: '{value_text}'")
+        
         if logo_url:
             elements_desc.append(f"- Logo image (src='{logo_url}')")
+        
         for i, p in enumerate(packshot_urls):
             elements_desc.append(f"- Packshot image {i+1} (src='{p}')")
 
-        prompt = f"""
+        text_prompt = f"""
         You are an expert graphic designer. Create a JSON layout for a retail banner ad.
         
         Canvas Details:
@@ -116,6 +147,8 @@ def generate_layout_json(
              ]
            }}
         3. Design Guidelines:
+           - **Visual Analysis:** Look at the provided product images. Place text in negative space (empty areas) if possible. Match the color scheme to the product if appropriate.
+           - **Copy Generation:** If headline or subhead were marked MISSING, generate them now. Keep them short, punchy, and relevant to the visual product.
            - **Safe Zones:** Keep all text and logos at least 50px away from any edge. Do NOT place content at y=0 or y={height}.
            - **Style:** Use a clean, modern retail style. Prefer dark text on white background or white text on transparent background if over a clean area. Avoid heavy black bars behind text unless absolutely necessary for contrast.
            - **Logo:** Place the logo in a corner (top-left, top-right) or top-center, with ample padding (at least 40px from top/left).
@@ -123,8 +156,10 @@ def generate_layout_json(
            - **Text:** Ensure headline is prominent. Avoid overlapping text on top of product faces/details.
            - **Value Tile:** Make the price/offer pop (e.g., yellow/red background), but place it strategically (e.g., bottom corner or near product) without covering the product.
         """
+        
+        prompt_parts.append(text_prompt)
 
-        resp = model.generate_content(prompt)
+        resp = model.generate_content(prompt_parts)
         out = getattr(resp, "text", None)
         if not out:
             return None
