@@ -110,16 +110,18 @@ def generate_layout_json(
                  "bounds": {{ "x": int, "y": int, "width": int, "height": int }},
                  "font_size": int (if text),
                  "color": {{ "r": int, "g": int, "b": int, "a": 1 }},
+                 "background": {{ "r": int, "g": int, "b": int, "a": float }} (optional),
                  "z": int (layer order)
                }}
              ]
            }}
-        3. Arrange elements professionally. 
-           - Ensure no overlap between text and important image parts.
-           - Keep text legible (good font size).
-           - Respect safe zones (don't put content too close to edges).
-           - Center the main product (packshot).
-           - Place logo typically in a corner or top/bottom center.
+        3. Design Guidelines:
+           - **Safe Zones:** Keep all text and logos at least 50px away from any edge. Do NOT place content at y=0 or y={height}.
+           - **Style:** Use a clean, modern retail style. Prefer dark text on white background or white text on transparent background if over a clean area. Avoid heavy black bars behind text unless absolutely necessary for contrast.
+           - **Logo:** Place the logo in a corner (top-left, top-right) or top-center, with ample padding (at least 40px from top/left).
+           - **Packshots:** Center the main product images. Ensure they are large enough but do not touch the edges.
+           - **Text:** Ensure headline is prominent. Avoid overlapping text on top of product faces/details.
+           - **Value Tile:** Make the price/offer pop (e.g., yellow/red background), but place it strategically (e.g., bottom corner or near product) without covering the product.
         """
 
         resp = model.generate_content(prompt)
