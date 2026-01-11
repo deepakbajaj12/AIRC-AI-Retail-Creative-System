@@ -55,6 +55,11 @@ export const deleteProject = async (id) => {
   return data
 }
 
+export const duplicateProject = async (id, newId) => {
+  const { data } = await api.post(`/projects/${id}/duplicate`, null, { params: { new_id: newId } })
+  return data
+}
+
 export const loadProject = async (id) => {
   const { data } = await api.get(`/projects/${id}`)
   return data

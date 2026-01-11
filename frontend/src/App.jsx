@@ -1,6 +1,6 @@
 import React from 'react'
 import CanvasEditor from './components/CanvasEditor'
-import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, deleteProject, removeBackground } from './api'
+import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, deleteProject, duplicateProject, removeBackground } from './api'
 import { applyAutofixes } from './autofix'
 
 const FORMATS = {
@@ -167,6 +167,22 @@ export default function App(){
     }
   }
 
+  const onDuplicateProject = async ()=>{
+    if(!projectId) return
+    const newId = prompt('Enter new project ID:', projectId + '_copy')
+    if(!newId) return
+    try {
+      const res = await duplicateProject(projectId, newId)
+      if(res.error) return alert('Duplication failed: ' + res.error)
+      await refreshProjects()
+      setProjectId(newId)
+      alert('Project duplicated')
+    } catch(e) {
+      console.error(e)
+      alert('Failed to duplicate project')
+    }
+  }
+
   const onRemoveBgLastPackshot = async ()=>{
     if (!packshots.length) return
     const last = packshots[packshots.length - 1]
@@ -221,9 +237,10 @@ export default function App(){
           <label>Value Tile<input value={valueText} onChange={e=>setValueText(e.target.value)} /></label>
           <h3>Project</h3>
           <label>Project ID<input value={projectId} onChange={e=>setProjectId(e.target.value)} /></label>
-          <div style={{display:'flex', gap:8}}>
+          <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
             <button onClick={onSaveProject}>Save</button>
             <button onClick={()=>onLoadProject(projectId)}>Load</button>
+            <button onClick={onDuplicateProject}>Duplicate</button>
             <button onClick={onDeleteProject} style={{backgroundColor:'#d9534f', color:'white'}}>Delete</button>
           </div>
           <div>

@@ -42,3 +42,16 @@ def delete_project(project_id: str):
         return {"error": "not_found", "success": False}
     path.unlink()
     return {"id": project_id, "success": True}
+
+@router.post("/{project_id}/duplicate")
+def duplicate_project(project_id: str, new_id: str):
+    src = PROJECTS_DIR / f"{project_id}.json"
+    dst = PROJECTS_DIR / f"{new_id}.json"
+    
+    if not src.exists():
+        return {"error": "source_not_found"}
+    if dst.exists():
+        return {"error": "destination_exists"}
+        
+    dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    return {"id": new_id, "file": str(dst)}
