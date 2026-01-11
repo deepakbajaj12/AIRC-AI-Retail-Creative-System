@@ -270,9 +270,16 @@ export default function App(){
           </div>
           <div>
             <small>Recent:</small>
-            <ul>
+            <ul style={{maxHeight:'200px', overflowY:'auto', paddingLeft:'1em'}}>
               {projects.map(p => (
-                <li key={p.id}><a href="#" onClick={(e)=>{e.preventDefault(); onLoadProject(p.id)}}>{p.id}</a></li>
+                <li key={p.id} style={{marginBottom:'4px'}}>
+                  <a href="#" onClick={(e)=>{e.preventDefault(); onLoadProject(p.id)}}>{p.id}</a>
+                  {p.updated_at && (
+                    <span style={{fontSize:'0.7em', color:'#888', marginLeft:'8px'}}>
+                      {new Date(p.updated_at * 1000).toLocaleDateString()}
+                    </span>
+                  )}
+                </li>
               ))}
             </ul>
           </div>

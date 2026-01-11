@@ -16,7 +16,12 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 def list_projects():
     items = []
     for p in PROJECTS_DIR.glob("*.json"):
-        items.append({"id": p.stem, "file": str(p)})
+        items.append({
+            "id": p.stem, 
+            "file": str(p),
+            "updated_at": p.stat().st_mtime
+        })
+    items.sort(key=lambda x: x["updated_at"], reverse=True)
     return {"projects": items}
 
 @router.get("/{project_id}")
