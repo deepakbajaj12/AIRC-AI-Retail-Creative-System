@@ -49,6 +49,7 @@ class Canvas(BaseModel):
     background_color: Optional[RGBA] = RGBA(r=255, g=255, b=255, a=1)
     background_image: Optional[str] = None
     elements: List[BaseElement | TextElement | ImageElement]
+    metadata: Optional[dict] = Field(default_factory=dict)
 
 class UploadResponse(BaseModel):
     files: List[str]

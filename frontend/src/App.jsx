@@ -253,6 +253,14 @@ export default function App(){
           <label>Value Tile<input value={valueText} onChange={e=>setValueText(e.target.value)} /></label>
           <h3>Project</h3>
           <label>Project ID<input value={projectId} onChange={e=>setProjectId(e.target.value)} /></label>
+          <label>Description
+            <textarea 
+              value={canvas.metadata?.description || ''} 
+              onChange={e=>setCanvas(c => ({...c, metadata: {...c.metadata, description: e.target.value}}))}
+              rows={2}
+              style={{width:'100%', fontSize:'0.9em'}}
+            />
+          </label>
           <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
             <button onClick={onSaveProject}>Save</button>
             <button onClick={()=>onLoadProject(projectId)}>Load</button>
