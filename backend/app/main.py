@@ -10,6 +10,7 @@ from .routes.compliance import router as compliance_router
 from .routes.export import router as export_router
 from .routes.projects import router as projects_router
 from .routes.image_tools import router as image_tools_router
+from .routes.copy import router as copy_router
 
 app = FastAPI(title="AIRC – AI Retail Creative System", version="0.1.0")
 
@@ -28,6 +29,7 @@ app.include_router(compliance_router, prefix="/api")
 app.include_router(export_router, prefix="/api")
 app.include_router(projects_router, prefix="/api")
 app.include_router(image_tools_router, prefix="/api")
+app.include_router(copy_router, prefix="/api")
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 

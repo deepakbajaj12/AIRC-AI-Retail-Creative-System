@@ -1,6 +1,6 @@
 import React from 'react'
 import CanvasEditor from './components/CanvasEditor'
-import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, deleteProject, duplicateProject, renameProject, removeBackground } from './api'
+import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, deleteProject, duplicateProject, renameProject, removeBackground, generateCopy } from './api'
 import { applyAutofixes } from './autofix'
 
 const FORMATS = {
@@ -208,6 +208,23 @@ export default function App(){
     }
   }
 
+  const onGenerateCopy = async () => {
+    const topic = prompt("Enter product name/topic:", "Organic Apples in Summer")
+    if (!topic) return
+    setBusy(true)
+    try {
+      const copy = await generateCopy(topic, "retail promotion")
+      setHeadline(copy.headline)
+      setSubhead(copy.subhead)
+      setValueText(copy.value_text)
+    } catch(e){
+      console.error(e)
+      alert('Copy generation failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const changeFormat = (f)=>{
     setFormat(f)
     const { w, h } = FORMATS[f]
@@ -248,6 +265,7 @@ export default function App(){
             <button onClick={onRemoveBgLastPackshot}>Remove BG (last packshot)</button>
           </div>
           <h3>Copy</h3>
+          <button onClick={onGenerateCopy} disabled={busy} style={{width:'100%', marginBottom:'8px'}}>✨ Magic Copy</button>
           <label>Headline<input value={headline} onChange={e=>setHeadline(e.target.value)} /></label>
           <label>Subhead<input value={subhead} onChange={e=>setSubhead(e.target.value)} /></label>
           <label>Value Tile<input value={valueText} onChange={e=>setValueText(e.target.value)} /></label>

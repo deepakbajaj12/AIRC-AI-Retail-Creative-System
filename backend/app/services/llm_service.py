@@ -44,6 +44,54 @@ def suggest_compliant_rewrite(text: str) -> Optional[str]:
         return None
 
 
+def generate_ad_copy(product_name: str, topic: str = "promotion") -> dict:
+    """
+    Generate ad copy (headline, subhead, value_text) for a product.
+    Returns a dict with those keys.
+    """
+    fallback = {
+        "headline": f"New {product_name}",
+        "subhead": "Quality you can trust",
+        "value_text": "Great Value"
+    }
+
+    if not _enabled():
+        return fallback
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return fallback
+
+    model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name)
+
+        prompt = (
+            f"Write retail ad copy for product: '{product_name}'. Topic: '{topic}'.\n"
+            "Return valid JSON with 3 keys: 'headline' (max 25 chars), 'subhead' (max 40 chars), 'value_text' (e.g. price/offer, max 15 chars).\n"
+            "No markdown formatting. JSON only."
+        )
+
+        resp = model.generate_content(prompt)
+        txt = getattr(resp, "text", "")
+        if not txt:
+            return fallback
+        
+        # clean cleanup
+        txt = txt.replace("```json", "").replace("```", "").strip()
+        data = json.loads(txt)
+        return {
+            "headline": data.get("headline", fallback["headline"]),
+            "subhead": data.get("subhead", fallback["subhead"]),
+            "value_text": data.get("value_text", fallback["value_text"]),
+        }
+    except Exception as e:
+        print(f"LLM Error: {e}")
+        return fallback
+
+
 def generate_layout_json(
     format_name: str,
     width: int,

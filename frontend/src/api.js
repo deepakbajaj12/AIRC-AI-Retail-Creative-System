@@ -74,3 +74,8 @@ export const removeBackground = async (assetUrl) => {
   const { data } = await api.post('/uploads/remove_bg', null, { params: { url: assetUrl } })
   return data
 }
+
+export const generateCopy = async (productName, topic) => {
+  const { data } = await api.post('/copy/generate', { product_name: productName, topic })
+  return data
+}
