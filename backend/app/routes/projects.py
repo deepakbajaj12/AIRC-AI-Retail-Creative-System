@@ -34,3 +34,11 @@ def save_project(project_id: str, canvas: Canvas):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(canvas.model_dump(), f, ensure_ascii=False, indent=2)
     return {"id": project_id, "file": str(path)}
+
+@router.delete("/{project_id}")
+def delete_project(project_id: str):
+    path = PROJECTS_DIR / f"{project_id}.json"
+    if not path.exists():
+        return {"error": "not_found", "success": False}
+    path.unlink()
+    return {"id": project_id, "success": True}

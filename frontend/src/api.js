@@ -50,6 +50,11 @@ export const saveProject = async (id, canvas) => {
   return data
 }
 
+export const deleteProject = async (id) => {
+  const { data } = await api.delete(`/projects/${id}`)
+  return data
+}
+
 export const loadProject = async (id) => {
   const { data } = await api.get(`/projects/${id}`)
   return data

@@ -1,6 +1,6 @@
 import React from 'react'
 import CanvasEditor from './components/CanvasEditor'
-import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, removeBackground } from './api'
+import { uploadAssets, suggestLayouts, checkCompliance, exportImage, serverAutofix, exportBatch, listProjects, saveProject, loadProject, deleteProject, removeBackground } from './api'
 import { applyAutofixes } from './autofix'
 
 const FORMATS = {
@@ -154,6 +154,19 @@ export default function App(){
     if (c?.format) setCanvas(c)
   }
 
+  const onDeleteProject = async ()=>{
+    if(!projectId) return
+    if(!window.confirm(`Delete project "${projectId}"?`)) return
+    try {
+      await deleteProject(projectId)
+      await refreshProjects()
+      alert('Project deleted')
+    } catch(e) {
+      console.error(e)
+      alert('Failed to delete project')
+    }
+  }
+
   const onRemoveBgLastPackshot = async ()=>{
     if (!packshots.length) return
     const last = packshots[packshots.length - 1]
@@ -211,6 +224,7 @@ export default function App(){
           <div style={{display:'flex', gap:8}}>
             <button onClick={onSaveProject}>Save</button>
             <button onClick={()=>onLoadProject(projectId)}>Load</button>
+            <button onClick={onDeleteProject} style={{backgroundColor:'#d9534f', color:'white'}}>Delete</button>
           </div>
           <div>
             <small>Recent:</small>
