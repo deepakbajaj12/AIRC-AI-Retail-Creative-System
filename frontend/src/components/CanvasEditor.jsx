@@ -22,7 +22,7 @@ function useImage(url) {
   return image
 }
 
-const CanvasImage = ({ el, onDragEnd }) => {
+const CanvasImage = ({ el, onDragEnd, onSelect, isSelected }) => {
   // Derive server root from API URL
   const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
   const serverUrl = apiBase.replace(/\/api\/?$/, '')
@@ -54,19 +54,40 @@ const CanvasImage = ({ el, onDragEnd }) => {
   }
 
   return (
-    <KImage
-      x={renderX}
-      y={renderY}
-      width={renderW}
-      height={renderH}
-      image={img}
-      draggable
-      onDragEnd={(e) => onDragEnd(el.id, e)}
-    />
+    <React.Fragment>
+      <KImage
+        x={renderX}
+        y={renderY}
+        width={renderW}
+        height={renderH}
+        image={img}
+        draggable
+        onDragEnd={(e) => onDragEnd(el.id, e)}
+        onClick={(e) => {
+          onSelect(el.id)
+          e.cancelBubble = true
+        }}
+        onTap={(e) => {
+          onSelect(el.id)
+          e.cancelBubble = true
+        }}
+      />
+      {isSelected && (
+        <Rect
+          x={renderX}
+          y={renderY}
+          width={renderW}
+          height={renderH}
+          stroke="#0096fd"
+          strokeWidth={2}
+          listening={false}
+        />
+      )}
+    </React.Fragment>
   )
 }
 
-const CanvasText = ({ el, onDragEnd }) => {
+const CanvasText = ({ el, onDragEnd, onSelect, isSelected }) => {
   const hasBackground = el.background && el.background.a > 0
   const bgColor = hasBackground ? `rgba(${el.background.r},${el.background.g},${el.background.b},${el.background.a})` : null
   const textColor = `rgba(${el.color.r},${el.color.g},${el.color.b},${el.color.a})`
@@ -83,11 +104,21 @@ const CanvasText = ({ el, onDragEnd }) => {
         height={el.bounds.height}
         draggable
         onDragEnd={(e) => onDragEnd(el.id, e)}
+        onClick={(e) => {
+          onSelect(el.id)
+          e.cancelBubble = true
+        }}
+        onTap={(e) => {
+          onSelect(el.id)
+          e.cancelBubble = true
+        }}
       >
         <Rect
           width={el.bounds.width}
           height={el.bounds.height}
           fill={bgColor}
+          stroke={isSelected ? '#0096fd' : null}
+          strokeWidth={isSelected ? 2 : 0}
         />
         <Text
           y={textY}
@@ -104,24 +135,45 @@ const CanvasText = ({ el, onDragEnd }) => {
   }
 
   return (
-    <Text
-      x={el.bounds.x}
-      y={el.bounds.y}
-      width={el.bounds.width}
-      height={el.bounds.height}
-      text={el.text}
-      fontSize={el.font_size}
-      fontFamily={el.font_family}
-      fontStyle={el.font_weight === 'bold' ? 'bold' : 'normal'}
-      align={el.align}
-      fill={textColor}
-      draggable
-      onDragEnd={(e) => onDragEnd(el.id, e)}
-    />
+    <React.Fragment>
+      <Text
+        x={el.bounds.x}
+        y={el.bounds.y}
+        width={el.bounds.width}
+        height={el.bounds.height}
+        text={el.text}
+        fontSize={el.font_size}
+        fontFamily={el.font_family}
+        fontStyle={el.font_weight === 'bold' ? 'bold' : 'normal'}
+        align={el.align}
+        fill={textColor}
+        draggable
+        onDragEnd={(e) => onDragEnd(el.id, e)}
+        onClick={(e) => {
+          onSelect(el.id)
+          e.cancelBubble = true
+        }}
+        onTap={(e) => {
+          onSelect(el.id)
+          e.cancelBubble = true
+        }}
+      />
+      {isSelected && (
+        <Rect
+          x={el.bounds.x}
+          y={el.bounds.y}
+          width={el.bounds.width}
+          height={el.bounds.height}
+          stroke="#0096fd"
+          strokeWidth={2}
+          listening={false}
+        />
+      )}
+    </React.Fragment>
   )
 }
 
-export default function CanvasEditor({ canvas, onChange }) {
+export default function CanvasEditor({ canvas, onChange, selectedId, onSelect }) {
   const w = canvas.width
   const h = canvas.height
   const [top, right, bottom, left] = SAFE_ZONES[canvas.format] || [0, 0, 0, 0]
@@ -136,22 +188,36 @@ export default function CanvasEditor({ canvas, onChange }) {
     onChange({ ...canvas, elements: updated })
   }
 
+  const handleStageClick = (e) => {
+    // if clicked on empty area - remove all selections
+    if (e.target === e.target.getStage()) {
+      onSelect(null)
+    }
+  }
+
   // Sort elements by z-index to ensure correct layering
   const sortedElements = [...canvas.elements].sort((a, b) => (a.z || 0) - (b.z || 0))
 
   return (
-    <Stage width={w} height={h} style={{border: '1px solid #ddd', background: `rgba(${canvas.background_color.r},${canvas.background_color.g},${canvas.background_color.b},${canvas.background_color.a})`}}>
+    <Stage 
+      width={w} 
+      height={h} 
+      style={{border: '1px solid #ddd', background: `rgba(${canvas.background_color.r},${canvas.background_color.g},${canvas.background_color.b},${canvas.background_color.a})`}}
+      onMouseDown={handleStageClick}
+      onTouchStart={handleStageClick}
+    >
       <Layer>
         {/* Safe zone overlay */}
         <Rect x={0} y={0} width={w} height={h} stroke="#ff5252" strokeWidth={4} />
         <Rect x={safeX} y={safeY} width={safeW} height={safeH} stroke="#4caf50" strokeWidth={2} dash={[8,6]} />
         <Text x={safeX + 10} y={safeY + 10} text="SAFE ZONE" fontSize={14} fill="#4caf50" fontStyle="bold" />
         {sortedElements.map(el => {
+          const isSelected = el.id === selectedId
           if (el.type === 'text' || el.type === 'value_tile') {
-            return <CanvasText key={el.id} el={el} onDragEnd={handleDragEnd} />
+            return <CanvasText key={el.id} el={el} onDragEnd={handleDragEnd} onSelect={onSelect} isSelected={isSelected} />
           }
           if (el.type === 'image' || el.type === 'logo' || el.type === 'packshot') {
-            return <CanvasImage key={el.id} el={el} onDragEnd={handleDragEnd} />
+            return <CanvasImage key={el.id} el={el} onDragEnd={handleDragEnd} onSelect={onSelect} isSelected={isSelected} />
           }
           return null
         })}

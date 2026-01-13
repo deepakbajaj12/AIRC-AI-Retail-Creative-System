@@ -35,6 +35,7 @@ export default function App(){
   const [busy, setBusy] = React.useState(false)
   const [projects, setProjects] = React.useState([])
   const [projectId, setProjectId] = React.useState('demo')
+  const [selectedId, setSelectedId] = React.useState(null)
 
   const onUploadLogo = async (e) => {
     const files = [...e.target.files]
@@ -199,6 +200,33 @@ export default function App(){
     }
   }
 
+  const onBringToFront = () => {
+    if (!selectedId) return
+    setCanvas(curr => {
+      const maxZ = Math.max(...curr.elements.map(e => e.z || 0), 0)
+      return {
+        ...curr,
+        elements: curr.elements.map(e => 
+          e.id === selectedId ? { ...e, z: maxZ + 1 } : e
+        )
+      }
+    })
+  }
+
+  const onSendToBack = () => {
+    if (!selectedId) return
+    setCanvas(curr => {
+      const minZ = Math.min(...curr.elements.map(e => e.z || 0), 0)
+      return {
+        ...curr,
+        elements: curr.elements.map(e => 
+          e.id === selectedId ? { ...e, z: minZ - 1 } : e
+        )
+      }
+    })
+  }
+
+
   const onRemoveBgLastPackshot = async ()=>{
     if (!packshots.length) return
     const last = packshots[packshots.length - 1]
@@ -319,9 +347,18 @@ export default function App(){
           </div>
         </aside>
         <section className="canvas">
-          <CanvasEditor canvas={canvas} onChange={setCanvas} />
+          <CanvasEditor canvas={canvas} onChange={setCanvas} selectedId={selectedId} onSelect={setSelectedId} />
         </section>
         <aside className="panel right">
+          {selectedId && (
+            <div style={{marginBottom:'1rem', padding:'10px', border:'1px solid #ccc', borderRadius:'4px'}}>
+              <h4>Layer Controls</h4>
+              <div style={{display:'flex', gap:'5px'}}>
+                <button onClick={onBringToFront}>Bring to Front</button>
+                <button onClick={onSendToBack}>Send to Back</button>
+              </div>
+            </div>
+          )}
           <h3>Compliance</h3>
           {issues.length === 0 ? <p>No issues yet. Run check.</p> : (
             <ul>
