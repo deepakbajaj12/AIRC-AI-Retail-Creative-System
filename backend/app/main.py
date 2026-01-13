@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import time
 from .config import ASSETS_DIR, STATIC_DIR
 
 from .routes.health import router as health_router
@@ -13,6 +14,15 @@ from .routes.image_tools import router as image_tools_router
 from .routes.copy import router as copy_router
 
 app = FastAPI(title="AIRC – AI Retail Creative System", version="0.1.0")
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    print(f"[{request.method}] {request.url.path} - took {process_time:.4f}s")
+    return response
 
 app.add_middleware(
     CORSMiddleware,
