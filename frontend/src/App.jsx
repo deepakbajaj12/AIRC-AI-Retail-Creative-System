@@ -231,6 +231,21 @@ export default function App(){
     setCanvas(c => ({ ...c, format: f, width: w, height: h }))
   }
 
+  const onResetCanvas = () => {
+    if (!window.confirm("Are you sure you want to reset the canvas? All elements will be removed.")) return
+    const { w, h } = FORMATS[format]
+    setCanvas({
+      format: format,
+      width: w,
+      height: h,
+      background_color: { r: 255, g: 255, b: 255, a: 1 },
+      elements: []
+    })
+    setIssues([])
+    setExportPath('')
+    setExportUrls([])
+  }
+
   return (
     <div className="app">
       <header>
@@ -242,6 +257,7 @@ export default function App(){
             </select>
           </label>
           <button onClick={onSuggest} disabled={busy}>AI Layout</button>
+          <button onClick={onResetCanvas} disabled={busy} style={{backgroundColor:'#f0f0f0', color:'#333'}}>Reset</button>
           <button onClick={onCheck}>Compliance Check</button>
           <button onClick={onApplyFixes} disabled={!issues.length}>Apply Fixes</button>
           <button onClick={onExport}>Export PNG</button>
