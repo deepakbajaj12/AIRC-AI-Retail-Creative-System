@@ -200,6 +200,29 @@ export default function App(){
     }
   }
 
+  const onOpenProject = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result)
+        if (data.format && Array.isArray(data.elements)) {
+          setCanvas(data)
+          // Optional: set projectId based on filename
+          setProjectId(file.name.replace('.json', ''))
+        } else {
+          alert('Invalid project file')
+        }
+      } catch (error) {
+        console.error(error)
+        alert('Failed to parsing project file')
+      }
+    }
+    reader.readAsText(file) // IMPORTANT: Reset value so same file can be opened again
+    e.target.value = null
+  }
+
   const onBringToFront = () => {
     if (!selectedId) return
     setCanvas(curr => {
@@ -324,6 +347,10 @@ export default function App(){
             />
           </label>
           <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
+            <label className="button-label" style={{border:'1px solid #777', padding:'2px 6px', borderRadius:'2px', cursor:'pointer', backgroundColor:'buttonface', color:'buttontext', fontSize:'13.33px', textAlign:'center', alignItems:'flex-start', boxSizing:'border-box'}}>
+              Open
+              <input type="file" accept=".json" onChange={onOpenProject} style={{display:'none'}} />
+            </label>
             <button onClick={onSaveProject}>Save</button>
             <button onClick={()=>onLoadProject(projectId)}>Load</button>
             <button onClick={onDuplicateProject}>Duplicate</button>
